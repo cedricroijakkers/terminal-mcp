@@ -97,8 +97,9 @@ Manages terminal session lifecycle:
 - Resource cleanup
 
 Design decisions:
-- Single session for simplicity
-- Session created on demand
+- The default session is initialized eagerly at startup in headless mode (`server.ts` calls `manager.initSession()` before connecting the MCP transport); the manager itself supports lazy, on-demand creation as a general capability
+- Additional named sessions are created on request via `createSession` (headless mode) and tracked alongside the default one
+- Idle non-default sessions are garbage-collected (`--session-idle-timeout`, default 600s); the default session cannot be destroyed
 - Automatic recreation if disposed
 
 ### Terminal Session (`src/terminal/session.ts`)
@@ -320,7 +321,6 @@ const proc = spawn('node', ['dist/index.js']);
 
 ### Planned Features
 
-- **Multiple Sessions**: Named sessions for parallel terminals
 - **Dynamic Resize**: Tool to resize terminal dimensions
 - **Environment Config**: CLI options for environment variables
 - **Session Persistence**: Save/restore session state
