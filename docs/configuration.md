@@ -125,7 +125,17 @@ The simplest setup — no separate interactive session needed:
 }
 ```
 
+This is **client mode**: it proxies to a separate interactive session you run yourself (`terminal-mcp`, or `node /path/to/terminal-mcp/dist/index.js`). See "Interactive + Client mode" in the README for the full workflow.
+
 ### With Custom Options
+
+`--cols`, `--rows`, and `--shell` configure the **interactive session**'s terminal, not the client config above - the client itself has no terminal to size or shell to pick. Pass them to the interactive launch instead:
+
+```sh
+node /path/to/terminal-mcp/dist/index.js --cols 100 --rows 30 --shell /bin/zsh
+```
+
+Using headless mode instead? Pass them directly in that configuration's `args`, since the embedded PTY lives in the same process:
 
 ```json
 {
@@ -134,6 +144,7 @@ The simplest setup — no separate interactive session needed:
       "command": "node",
       "args": [
         "/path/to/terminal-mcp/dist/index.js",
+        "--headless",
         "--cols", "100",
         "--rows", "30",
         "--shell", "/bin/zsh"

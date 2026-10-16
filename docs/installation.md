@@ -103,19 +103,6 @@ After running the install script, add Terminal MCP to your MCP client configurat
 }
 ```
 
-With custom options:
-
-```json
-{
-  "mcpServers": {
-    "terminal": {
-      "command": "terminal-mcp",
-      "args": ["--cols", "100", "--rows", "30", "--shell", "/bin/zsh"]
-    }
-  }
-}
-```
-
 This configuration (no `--headless`) runs **client mode**: it connects your MCP host to a separate **interactive session** you run yourself in a terminal window, so you can watch and drive the same shell the AI uses. Open a terminal and run:
 
 ```sh
@@ -128,6 +115,7 @@ and leave it open whenever you want the AI to use it. Starting the interactive s
 - Start the interactive session at any point after: the next tool call connects automatically - no restart of your MCP client or host required.
 - If the interactive session closes or crashes, the next tool call reconnects the same way once a new one is running; a call already in flight when it drops gets a clear error rather than hanging.
 - Using a custom `--socket` path? Pass the same `--socket <path>` to both the interactive session and this configuration's `args`.
+- Need a custom size or shell? `--cols`/`--rows`/`--shell` configure the **interactive session**, not this client config - the client itself has no terminal to size or shell to pick. Pass them to the interactive launch instead: `terminal-mcp --cols 100 --rows 30 --shell /bin/zsh`.
 
 If you'd rather skip running a second process altogether, add `--headless` to this configuration's `args` instead - it's self-contained and needs no interactive session:
 
