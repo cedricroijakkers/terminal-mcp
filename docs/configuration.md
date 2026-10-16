@@ -324,6 +324,4 @@ In **client mode**, the PTY lives in the separate interactive `terminal-mcp` pro
 
 ### Concurrent Sessions
 
-Currently, Terminal MCP supports a single terminal session. The session is created on first tool use and persists until shutdown.
-
-Future versions may support multiple named sessions.
+Terminal MCP supports multiple named sessions in headless mode (see "Multi-Session" in the README): a default session is initialized eagerly at startup and persists until shutdown, and additional sessions can be created on demand with `createSession`, capped at `--max-sessions` (default 5). Client mode always targets the single interactive session it's connected to - it has no `sessionId` or multi-session tools.

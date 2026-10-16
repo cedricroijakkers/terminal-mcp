@@ -328,7 +328,7 @@ Destroy a session by ID. The default session cannot be destroyed.
 
 By default, every tool call without a `sessionId` targets a single auto-created **default session** - the same behavior the project has always had. Pass `sessionId` to drive multiple isolated PTYs from one process. Client mode has no `sessionId` or multi-session tools - it always targets the single interactive session it's connected to.
 
-- The default session is created on first use and cannot be destroyed.
+- The default session is initialized eagerly at startup and cannot be destroyed.
 - Additional sessions are created by `createSession` and tracked until they're destroyed or idle-evicted (`--session-idle-timeout`, default 600s).
 - Concurrent sessions are capped at `--max-sessions` (default 5).
 - An active recording captures output from all sessions in the process.
