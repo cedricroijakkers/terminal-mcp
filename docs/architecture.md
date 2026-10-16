@@ -50,7 +50,7 @@ Terminal MCP has three operating modes, selected by the `--headless` flag and TT
 |------|-----------|-------------|
 | **Headless** | `--headless` flag | Self-contained: spawns embedded PTY, serves MCP over stdio. No socket or TTY needed. Recommended for MCP client configs. |
 | **Interactive** | stdin is TTY | User gets a shell with PTY I/O. Exposes a Unix socket for AI tool access. |
-| **Client** | stdin is not TTY | Connects to an interactive session's socket, proxies MCP tools over stdio. |
+| **Client** | stdin is not TTY | Connects lazily to an interactive session's socket (on the first tool call, not at startup), proxies MCP tools over stdio. No interactive session yet: a tool call returns a friendly error naming `terminal-mcp` as the command to start one, and no restart is needed once one appears. A session dropping mid-call rejects that call with a "session ended" error rather than replaying it; the next tool call reconnects automatically. |
 
 **Headless mode** (single process):
 ```

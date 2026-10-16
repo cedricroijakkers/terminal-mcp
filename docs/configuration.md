@@ -150,8 +150,10 @@ name: an unrelated placeholder package occupies the unscoped `terminal-mcp`,
 so `npx terminal-mcp` would fetch the wrong thing.
 
 `--headless` is required here. Without it, stdin is not a TTY when an MCP
-client spawns the process, so it starts in MCP client mode and tries to
-connect to the Unix socket of an interactive session that isn't running.
+client spawns the process, so it starts in MCP client mode: it stays up and
+serves tool listings fine, but every tool call fails with a friendly error
+until a separate interactive `terminal-mcp` session exists at the same
+socket path. `--headless` sidesteps needing one at all.
 
 ```json
 {
