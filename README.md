@@ -88,19 +88,6 @@ Add to your MCP client settings:
 }
 ```
 
-With custom options:
-
-```json
-{
-  "mcpServers": {
-    "terminal": {
-      "command": "terminal-mcp",
-      "args": ["--cols", "100", "--rows", "30", "--shell", "/bin/zsh"]
-    }
-  }
-}
-```
-
 This `"command": "terminal-mcp"` entry (no `--headless`) starts **client mode**: it serves MCP tool listing right away, but each tool call proxies to a separate **interactive session** you run yourself, so you can watch and drive the same terminal the AI uses. Open a terminal and run:
 
 ```sh
@@ -113,6 +100,7 @@ and leave it open while you want the AI to use it. Either process can start firs
 - Start the interactive session any time after: the next tool call connects to it automatically. No need to restart your MCP host or client.
 - Close the interactive session (or it crashes) while the host stays connected: the next tool call reconnects to a new interactive session the same way, once you start one. A call already in flight when the session drops gets a clear error instead of hanging or being silently retried.
 - Using a custom `--socket` path? Pass the same `--socket <path>` to both the interactive session and the MCP client config's `args`, so they agree on where to connect.
+- Need a custom size or shell? `--cols`/`--rows`/`--shell` configure the **interactive session**, not this client config - the client itself has no terminal to size or shell to pick. Pass them to the interactive launch instead: `terminal-mcp --cols 100 --rows 30 --shell /bin/zsh`.
 
 If you'd rather not run a separate interactive session at all, see **Headless Mode** below - it is self-contained and needs no second process.
 
