@@ -101,6 +101,21 @@ With custom options:
 }
 ```
 
+This `"command": "terminal-mcp"` entry (no `--headless`) starts **client mode**: it serves MCP tool listing right away, but each tool call proxies to a separate **interactive session** you run yourself, so you can watch and drive the same terminal the AI uses. Open a terminal and run:
+
+```sh
+terminal-mcp
+```
+
+and leave it open while you want the AI to use it. Either process can start first, and the order doesn't matter:
+
+- No interactive session running yet: your MCP host's `terminal-mcp` server still connects and lists tools fine; a tool call (`type`, `sendKey`, etc.) returns a friendly error telling you to run `terminal-mcp` and try again.
+- Start the interactive session any time after: the next tool call connects to it automatically. No need to restart your MCP host or client.
+- Close the interactive session (or it crashes) while the host stays connected: the next tool call reconnects to a new interactive session the same way, once you start one. A call already in flight when the session drops gets a clear error instead of hanging or being silently retried.
+- Using a custom `--socket` path? Pass the same `--socket <path>` to both the interactive session and the MCP client config's `args`, so they agree on where to connect.
+
+If you'd rather not run a separate interactive session at all, see **Headless Mode** below - it is self-contained and needs no second process.
+
 ### Command-Line Options
 
 ```

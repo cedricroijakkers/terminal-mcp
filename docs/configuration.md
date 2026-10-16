@@ -303,11 +303,13 @@ For most use cases, memory usage is minimal (< 50MB).
 
 ### Process Lifetime
 
-The terminal session lives for the duration of the MCP connection. When the AI assistant disconnects:
+In **headless mode**, the terminal session lives for the duration of the MCP connection, in the same process. When the AI assistant disconnects:
 
 1. SIGTERM is sent to gracefully shutdown
 2. The PTY process is killed
 3. All resources are cleaned up
+
+In **client mode**, the PTY lives in the separate interactive `terminal-mcp` process, not the client process the MCP host spawns. The client disconnecting (or the host restarting it) only closes that proxy connection - the interactive session and its shell keep running until you exit it or it crashes on its own.
 
 ### Concurrent Sessions
 
