@@ -62,7 +62,7 @@ Interactive mode will print a banner on next launch when a newer release is avai
 - **Session Recording**: Record terminal sessions to asciicast format for playback with asciinema
 - **Simple API**: Nine tools covering input, observation, recording, and session lifecycle
 - **Headless Mode**: Run as a standalone MCP server without a TTY — ideal for CI, containers, and non-interactive environments
-- **Multi-Session**: Run multiple isolated terminal sessions in one process, addressed by `sessionId`
+- **Multi-Session**: Run multiple isolated terminal sessions in one process, addressed by `sessionId` (headless mode only - client mode proxies a single interactive session)
 - **Sandbox Mode**: Optional security restrictions for filesystem and network access
 
 ## Building from Source
@@ -191,7 +191,9 @@ In headless mode, the terminal session is initialized eagerly at startup, so all
 
 ## MCP Tools
 
-All input/output tools (`type`, `sendKey`, `getContent`, `takeScreenshot`) accept an optional `sessionId` argument. Omit it to target the default session; pass the ID returned by `createSession` to drive a specific session.
+`createSession`, `listSessions`, and `destroySession` (below), along with the `sessionId` argument on the input/output tools, are **headless mode only**. Client mode proxies six tools (`type`, `sendKey`, `getContent`, `takeScreenshot`, `startRecording`, `stopRecording`) against the single interactive session it connects to; it has no session to create, list, or destroy, and `sessionId` has nothing to target.
+
+All input/output tools (`type`, `sendKey`, `getContent`, `takeScreenshot`) accept an optional `sessionId` argument in headless mode. Omit it to target the default session; pass the ID returned by `createSession` to drive a specific session.
 
 ### `type`
 Send text input to the terminal.
@@ -289,7 +291,7 @@ Stop a recording and finalize the asciicast file.
 }
 ```
 
-### `createSession`
+### `createSession` *(headless mode only)*
 Create a new terminal session and return its metadata. Use the returned `sessionId` to target this session in subsequent tool calls.
 
 ```json
@@ -317,14 +319,14 @@ All arguments are optional. Returns:
 }
 ```
 
-### `listSessions`
+### `listSessions` *(headless mode only)*
 List all active sessions including the default. Reports configured limits.
 
 ```json
 { "name": "listSessions", "arguments": {} }
 ```
 
-### `destroySession`
+### `destroySession` *(headless mode only)*
 Destroy a session by ID. The default session cannot be destroyed.
 
 ```json
@@ -334,9 +336,9 @@ Destroy a session by ID. The default session cannot be destroyed.
 }
 ```
 
-## Multi-Session
+## Multi-Session *(headless mode only)*
 
-By default, every tool call without a `sessionId` targets a single auto-created **default session** — the same behavior the project has always had. Pass `sessionId` to drive multiple isolated PTYs from one process.
+By default, every tool call without a `sessionId` targets a single auto-created **default session** - the same behavior the project has always had. Pass `sessionId` to drive multiple isolated PTYs from one process. Client mode has no `sessionId` or multi-session tools - it always targets the single interactive session it's connected to.
 
 - The default session is created on first use and cannot be destroyed.
 - Additional sessions are created by `createSession` and tracked until they're destroyed or idle-evicted (`--session-idle-timeout`, default 600s).
