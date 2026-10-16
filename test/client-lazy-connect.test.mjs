@@ -133,11 +133,13 @@ test("connects once a session appears after startup, surviving a fragmented firs
           if (!line.trim()) continue;
           const req = JSON.parse(line);
           const payload = JSON.stringify({ id: req.id, result: { content: [{ type: "text", text: "ok" }] } }) + "\n";
-          // Split the *response* across two separate socket writes to
-          // prove attachSocket's per-connection buffer reassembles a frame
-          // split across TCP writes rather than requiring one write per line
-          // (the two writes are not guaranteed to land in two separate
-          // `data` events, but the reassembly logic must handle it either way).
+          // Split the *response* across two separate socket writes as an
+          // end-to-end sanity check of the real socket plumbing. The two
+          // writes are not guaranteed to land in two separate `data` events
+          // (test/line-decoder.test.mjs proves the reassembly itself
+          // deterministically, by calling push() directly with no socket in
+          // the way); this test only confirms attachSocket wires that logic
+          // up correctly against a real net.Socket.
           c.write(payload.slice(0, 5));
           setTimeout(() => c.write(payload.slice(5)), 5);
         }
@@ -193,5 +195,54 @@ test("recovers after a connection drops mid-response with a partial (incomplete)
     state.child.kill("SIGKILL");
     if (server) await new Promise((resolve) => server.close(() => resolve()));
     if (replacement) await new Promise((resolve) => replacement.close(() => resolve()));
+  }
+});
+
+test("reassembles a multi-byte UTF-8 character split across two socket writes", async () => {
+  const sockPath = path.join(os.tmpdir(), `tmcp-test-utf8-${process.pid}-${Date.now()}.sock`);
+  const state = spawnNode(["dist/index.js", "--socket", sockPath]);
+  let server = null;
+
+  try {
+    await initialize(state);
+
+    let conn = null;
+    server = net.createServer((c) => {
+      conn = c;
+      let buf = "";
+      c.on("data", (d) => {
+        buf += d.toString();
+        const lines = buf.split("\n");
+        buf = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const req = JSON.parse(line);
+          // U+1F680 ROCKET is 4 bytes in UTF-8 (F0 9F 9A 80). Split the raw
+          // bytes in the middle of that sequence, not at a line or character
+          // boundary, so a naive per-chunk `data.toString()` decodes each half
+          // as invalid UTF-8 and replaces it with U+FFFD instead of
+          // reassembling the original character. The two writes below are
+          // not guaranteed to arrive as two separate `data` events (that part
+          // is proven deterministically by test/line-decoder.test.mjs,
+          // calling push() directly); this is an end-to-end sanity check
+          // that the real socket plumbing wires LineDecoder in correctly.
+          const payload = Buffer.from(
+            JSON.stringify({ id: req.id, result: { content: [{ type: "text", text: "\u{1F680}" }] } }) + "\n",
+            "utf8"
+          );
+          const splitAt = payload.indexOf(0xf0) + 2; // inside the rocket's 4-byte sequence
+          c.write(payload.subarray(0, splitAt));
+          setTimeout(() => c.write(payload.subarray(splitAt)), 5);
+        }
+      });
+    });
+    await new Promise((resolve) => server.listen(sockPath, resolve));
+
+    callTool(state, 2, "getContent", {});
+    const res = await waitFor(() => findResponse(state, 2));
+    assert.equal(res.result.content[0].text, "\u{1F680}", "a multi-byte character split across two writes must reassemble correctly, not become replacement characters");
+  } finally {
+    state.child.kill("SIGKILL");
+    if (server) await new Promise((resolve) => server.close(() => resolve()));
   }
 });

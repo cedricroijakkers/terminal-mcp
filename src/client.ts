@@ -8,6 +8,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { toolDefinitions } from "./tools/definitions.js";
 import { installStdioShutdownHandlers } from "./utils/shutdown.js";
+import { LineDecoder } from "./utils/line-decoder.js";
 
 interface SocketRequest {
   id: number;
@@ -74,14 +75,10 @@ export async function startMcpClientMode(socketPath: string): Promise<void> {
   function attachSocket(s: net.Socket): void {
     // Owned by this connection alone: a stale partial line from a dead
     // connection must never prefix a new connection's first response.
-    let buffer = "";
+    const decoder = new LineDecoder();
 
     s.on("data", (data) => {
-      buffer += data.toString();
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
+      for (const line of decoder.push(data)) {
         if (line.trim()) {
           try {
             const response = JSON.parse(line) as SocketResponse;
